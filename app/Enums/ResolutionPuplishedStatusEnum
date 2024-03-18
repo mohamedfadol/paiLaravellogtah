@@ -1,0 +1,8 @@
+<?php
+
+namespace App\Enums;
+enum ResolutionPuplishedStatusEnum: string {
+    case UNPUBLISHED = 'unpublished';
+    case PUBLISHED = 'published';
+    case ARCHIVED = 'archived';
+}

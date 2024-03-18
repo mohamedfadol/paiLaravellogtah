@@ -1,0 +1,35 @@
+[2024-03-18 02:06:24] local.INFO: eMj3RP7WQhuX6earr9vSiB:APA91bEMLhwPlwOADPmwX8HZcJSDomPV0Wc5QSFw3Ivx2-ralhZvKVSOvMiZ7nK4_I_V2YQ98-gtTSElJ4K2ukeyYpl_6qiA_z3SbXRLlhefPeYQ-hDJ-WO5cRHG69sApa-EpKHZhEqV  
+[2024-03-18 02:07:04] local.INFO: comeing request notes  
+[2024-03-18 02:07:04] local.INFO: 2024  
+[2024-03-18 02:07:12] local.INFO: coming Request Meetings  
+[2024-03-18 02:08:06] local.INFO: comeing request notes  
+[2024-03-18 02:08:06] local.INFO: 2024  
+[2024-03-18 02:09:28] local.INFO: comeing request notes  
+[2024-03-18 02:09:28] local.INFO: 2024  
+[2024-03-18 02:09:28] local.INFO: comeing request notes  
+[2024-03-18 02:09:28] local.INFO: 2024  
+[2024-03-18 02:09:28] local.INFO: comeing request notes  
+[2024-03-18 02:09:28] local.INFO: 2024  
+[2024-03-18 02:09:56] local.INFO: 1  
+[2024-03-18 02:09:56] local.INFO: [{"id":1,"member_profile_image":null,"signature":null,"member_biography":null,"member_first_name":"mohamed","member_middel_name":"fadol","member_last_name":null,"member_mobile":null,"member_email":"test@test.com","member_password":"$2y$10$5zYmYDpVFFeARm5lzXpkFOMuDwJ0W7z8NAHUhq9dmP6dTUYGF7BiC","name_password":"test@test.com","member_signature":null,"is_active":false,"has_vote":false,"member_type":"owner","created_by":1,"position_id":1,"business_id":1,"deleted_at":null,"created_at":"2024-03-13T20:28:23.000000Z","updated_at":"2024-03-13T20:28:23.000000Z","fcm":"","position":{"id":1,"position_name":"CEO","is_active":false,"has_vote":false,"created_by":null,"business_id":null,"deleted_at":null,"created_at":"2024-03-13T20:28:23.000000Z","updated_at":"2024-03-13T20:28:23.000000Z"},"committees":[],"boards":[],"criterias":[]}]  
+[2024-03-18 02:09:59] local.INFO: coming requist actions trackers  
+[2024-03-18 02:09:59] local.INFO: 2024  
+[2024-03-18 02:11:27] local.INFO: array (
+  'multicast_id' => 5760192992949919364,
+  'success' => 1,
+  'failure' => 0,
+  'canonical_ids' => 0,
+  'results' => 
+  array (
+    0 => 
+    array (
+      'message_id' => '0:1710727889025458%2f0a7be92f0a7be9',
+    ),
+  ),
+)  
+[2024-03-18 04:27:03] local.INFO: comeing request notes  
+[2024-03-18 04:27:03] local.INFO: 2024  
+[2024-03-18 04:27:03] local.INFO: comeing request notes  
+[2024-03-18 04:27:03] local.INFO: 2024  
+[2024-03-18 04:29:07] local.INFO: comeing request notes  
+[2024-03-18 04:29:07] local.INFO: 2024  
