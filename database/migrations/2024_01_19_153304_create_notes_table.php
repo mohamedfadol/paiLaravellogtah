@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('notes', function (Blueprint $table) {
             $table->id();
             $table->longText('note')->nullable();
-            $table->string('annotation_id')->nullable();
+            $table->integer('annotation_id')->nullable();
             $table->double('positionDx')->nullable();
             $table->double('positionDy')->nullable();
             $table->integer('page_index')->nullable();

@@ -12,8 +12,12 @@ class Note extends Model
     protected $table = 'notes';
     protected $guarded = ['id'];
 
-    public function member() {
-        return $this->belongsTo(Member::class);
+    public function user() {
+        return $this->belongsTo(User::class, 'addby');
+    }
+
+    public function agenda() {
+        return $this->belongsTo(Agenda::class, 'agenda_id');
     }
 
 }

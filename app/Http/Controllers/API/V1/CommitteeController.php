@@ -71,8 +71,17 @@ class CommitteeController extends Controller
     {
         \Log::info($request->business_id);
         //should say where business and where board 
-        $committees = Committee::where('business_id', $request->business_id)->with(['meetings','board' => function($e){return $e->with('business');},'business',
-                                                                                    'members' => function($e){return $e->with('position');}])->get();
+        $committees = Committee::where('business_id', $request->business_id)
+                                ->with([
+                                    'meetings',
+                                    'board' => function($e){
+                                        return $e->with('business');
+                                    },
+                                    'business',
+                                    'members' => function($e){
+                                        return $e->with('position');
+                                    }
+                                    ])->get();
 
         if (!$committees) {
             return $this->error('', 'there\'s not committees found ', 401);

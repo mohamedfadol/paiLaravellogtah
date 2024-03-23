@@ -66,7 +66,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     
     // committee routes for resources
     Route::controller(CommitteeController::class)
-    ->group(function () {
+    ->group(function () { 
         Route::post('insert-new-committee', 'insertNewCommittee');
         Route::get('get-list-committees/{business_id}','getListOfCommittees');
         Route::get('get-all-committees/{business_id}','getAllOfCommittees');
@@ -176,6 +176,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('get-list-board-notes','getListOfBoardNotes');
         Route::post('get-list-committee-notes','getListOfCommitteeNotes');
         Route::post('insert-new-note','insertNewNote');
+        Route::post('extract-pdf-text','extractTextFromLocalPdfFiles');
+        Route::get('get-all-pdffiles','getPdfFiles');
+        Route::post('get-all-extract-text','makeSearchForAllFile');
+        Route::post('extract-pdf-text-multiple-uri','extractEnglishTextFromMultiplePdfFilesFromUri');
+        Route::post('get-all-arabic-text','extractArabicTextFromMultiplePdfFilesFromUri');
     });
    
     // get list of notification for specific member
