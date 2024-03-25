@@ -16,14 +16,117 @@ use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\SearchableRequest;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\Process\Exception\ProcessFailedException;
-
+use PDFParser;
+use Smalot\PdfParser\Parser; 
 class NotesController extends Controller
 {
     use HttpResponses;
 
+    public function searchArabicText($request)
+    {
+            \Log::info("comeing request searchArabicText function");
+            $searchText  = $this->reverseWords($request->input('searchText'));
+            // $folderPath = public_path('meetings/boards');
+            // $files = \File::files($folderPath);
+            $files = $this->getPdfFiles();
+            // dd($files);
+            $results = [];
+            foreach ($files['meetings'] as $file) {
+                $config = new \Smalot\PdfParser\Config();
+                // Whether to retain raw image data as content or discard it to save memory
+                // $config->setRetainImageContent(false);
+                // Memory limit to use when de-compressing files, in bytes
+                // $config->setDecodeMemoryLimit(100000000000000032);
+                $config->setIgnoreEncryption(true);
+                // $config->setHorizontalOffset('');
+                // A tab can help preserve the structure of your document
+                // $config->setHorizontalOffset("\t");
+                // $config->setFontSpaceLimit(-60);
+                $parser = new \Smalot\PdfParser\Parser([], $config);
+                try{
+                    $pdf = $parser->parseFile($file);
+                    $text = $pdf->getText();
+                    // Count occurrences of the search term
+                    $count = substr_count(strtolower($text), $searchText);
+                    if ($count > 0) {
+                        $results[] = [
+                            'url' => $file,
+                            'count' => $count,
+                            'search_text' => $request->input('searchText')
+                        ];
+                    }
+                } catch (\Exception $e) {
+                    // Handle any exceptions, possibly log them or continue to the next file
+                    continue;
+                }
+            }
+    
+            if (!empty($results)) {
+                return $this->success(['files' =>  $results]); 
+            } else {
+                return response()->json(['found' => false, 'message' => 'Text not found in any PDF.']);
+            }
+         
+    }
+
+    public function searchEnglishText($request)
+    {
+            \Log::info("comeing request searchEnglishText function");
+            // echo 'pcre.backtrack_limit: ', ini_get('pcre.backtrack_limit'), '<br>';
+            // echo 'pcre.recursion_limit: ', ini_get('pcre.recursion_limit'), '<br>';
+            $searchText  = $request->input('searchText');
+            // $files = $request->file('pdfs');
+            $files = $this->getPdfFiles();
+            // $files = \File::files($folderPath);
+            // dd($files);
+            $results = [];
+            foreach ($files['meetings'] as $file) {
+                $config = new \Smalot\PdfParser\Config();
+                // Whether to retain raw image data as content or discard it to save memory
+                // $config->setRetainImageContent(false);
+                // Memory limit to use when de-compressing files, in bytes
+                // $config->setDecodeMemoryLimit(100000000000000032);
+                $config->setIgnoreEncryption(true);
+                // $config->setHorizontalOffset('');
+                // A tab can help preserve the structure of your document
+                // $config->setHorizontalOffset("\t");
+                // $config->setFontSpaceLimit(-60);
+                $parser = new \Smalot\PdfParser\Parser([], $config);
+                 try {
+                        $pdf = $parser->parseFile($file);
+                        $text = $pdf->getText();
+                        // $testBinary = preg_replace('/\(.*$/s', '', $text);
+                        // if (!preg_match('/^[a-zA-Z0-9 \r\n\/*#<>\[\].\'"_-]*$/', $testBinary)) {
+                        //     // if (false === mb_check_encoding(preg_replace('/\(.*$/s', '', $text), 'UTF-8')) {
+                        //     continue;
+                        // }
+                        // Count occurrences of the search term
+                        $count = substr_count(strtolower($text), strtolower($searchText));
+                        if ($count > 0) {
+                            $results[] = [
+                                'url' => $file,
+                                'count' => $count,
+                                'search_text' => $request->input('searchText')
+                            ];
+                        }
+                    } catch (\Exception $e) {
+                        // Handle any exceptions, possibly log them or continue to the next file
+                        continue;
+                    }
+            }
+    
+            if (!empty($results)) {
+                return $this->success(['files' =>  $results]); 
+            } else {
+                return response()->json(['found' => false, 'message' => 'Text not found in any PDF.']);
+            }
+         
+    }
+    
+
     public function makeSearchForAllFile(SearchableRequest $request) {
         \Log::info("comeing request makeSearchForAllFile function");
-        \Log::info($request->all());
+        // \Log::info($request->all());
         $arabicPattern = '/[\x{0600}-\x{06FF}\x{0750}-\x{077F}\x{08A0}-\x{08FF}\x{FB50}-\x{FDFF}\x{FE70}-\x{FEFF}]/u';
         // English regex pattern
         $englishPattern = '/[a-zA-Z]/';
@@ -34,13 +137,13 @@ class NotesController extends Controller
         
         // Determine language
         if ($containsArabic && !$containsEnglish) {
-            return $this->extractArabicTextFromMultiplePdfFilesFromUri($request);
+            return $this->searchArabicText($request);
         } elseif (!$containsArabic && $containsEnglish) {
-            return $this->extractEnglishTextFromMultiplePdfFilesFromUri($request);
+            return $this->searchEnglishText($request);
         } elseif ($containsArabic && $containsEnglish) {
-            return $this->extractEnglishTextFromMultiplePdfFilesFromUri($request);
+            return $this->searchEnglishText($request);
         } else {
-            return  $this->extractEnglishTextFromMultiplePdfFilesFromUri($request);
+            return  $this->searchEnglishText($request);
         }
     }
 
@@ -63,13 +166,17 @@ class NotesController extends Controller
         $files = File::allFiles($path);
 
         foreach ($files as $file) {
-            if ($file->getExtension() === 'pdf') {
-                $allPdfFiles[] = $file->getPathname();
+            if ( $file->getExtension() === 'pdf'  && is_readable($file->getPathname()) ) {
+                
+                    $allPdfFiles[] = $file->getPathname();
+                 
             }
         }
 
         return $allPdfFiles;
     }
+
+ 
 
     public function reverseWords($sentence) {
         // Split the sentence into words

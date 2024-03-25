@@ -188,6 +188,7 @@ return [
         Yajra\Datatables\DatatablesServiceProvider::class,
         ConsoleTVs\Charts\ChartsServiceProvider::class,
         Barryvdh\Debugbar\ServiceProvider::class,
+        // Smalot\PdfParser\ServiceProvider::class,
 
         /*
          * Application Service Providers...
@@ -215,6 +216,7 @@ return [
         // 'ExampleClass' => App\Example\ExampleClass::class,
         'Datatables' => Yajra\Datatables\Facades\Datatables::class,
         'Debugbar' => Barryvdh\Debugbar\Facades\Debugbar::class,
+        // 'PDFParser' => Smalot\PdfParser\Parser::class,
     ])->toArray(),
 
 ];

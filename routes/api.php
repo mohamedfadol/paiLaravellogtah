@@ -181,6 +181,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('get-all-extract-text','makeSearchForAllFile');
         Route::post('extract-pdf-text-multiple-uri','extractEnglishTextFromMultiplePdfFilesFromUri');
         Route::post('get-all-arabic-text','extractArabicTextFromMultiplePdfFilesFromUri');
+        Route::post('ge-text','searcha');
     });
    
     // get list of notification for specific member

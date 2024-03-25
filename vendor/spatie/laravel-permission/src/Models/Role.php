@@ -17,7 +17,7 @@ class Role extends Model implements RoleContract
 {
     use HasPermissions;
     use RefreshesPermissionCache;
-    protected $casts = ['id' => 'integer'];
+
     protected $guarded = [];
 
     public function __construct(array $attributes = [])

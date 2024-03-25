@@ -50,23 +50,23 @@ class ActionTracker extends Model
     }
 
 
-    /**
-     * Get the start time in a more readable format.
-     */
-    public function getCreatedAtAttribute($value)
-    {
-        $date = Carbon::parse($value);
-        return $date->format('d-m-Y g:i:s A');
-    }
+    // /**
+    //  * Get the start time in a more readable format.
+    //  */
+    // public function getCreatedAtAttribute($value)
+    // {
+    //     $date = Carbon::parse($value);
+    //     return $date->format('d-m-Y g:i:s A');
+    // }
 
-    /**
-     * Get the start time in a more readable format.
-     */
-    public function getUpdatedAtAttribute($value)
-    {
-        $date = Carbon::parse($value);
-        return $date->format('d-m-Y g:i:s A');
-    }
+    // /**
+    //  * Get the start time in a more readable format.
+    //  */
+    // public function getUpdatedAtAttribute($value)
+    // {
+    //     $date = Carbon::parse($value);
+    //     return $date->format('d-m-Y g:i:s A');
+    // }
 
     public function business() {
         return $this->belongsTo(Business::class);

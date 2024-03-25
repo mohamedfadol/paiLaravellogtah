@@ -60,7 +60,7 @@ class UserController extends Controller
                     \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
                     return $this->error('', 'some thing occurs on edit actions trackers !!!', 500);
                 }
-    }
+    } 
 
     /**
      * Store a newly created resource in storage.
@@ -70,7 +70,7 @@ class UserController extends Controller
      */
     public function getUserProfile(Request $request)
     {
-        \Log::info($request->id);
+        \Log::info($request->id); 
         \Log::info($request->all());
         $user = User::findOrFail($request->id);
         \Log::info($user);
