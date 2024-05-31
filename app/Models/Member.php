@@ -93,9 +93,24 @@ class Member extends Model
         return $this->hasMany(Disclosure::class);
     }
     
+    // public function notes()
+    // {
+    //     return $this->hasMany(Note::class);
+    // }
+
     public function notes()
     {
-        return $this->hasMany(Note::class);
+        return $this->belongsToMany(Note::class);
+    }
+
+    public function audio_notes()
+    {
+        return $this->belongsToMany(AudioNote::class, 'member_audio_note' , 'member_id', 'audio_note_id')->withTimestamps();
+    }
+
+    public function canva_items()
+    {
+        return $this->belongsToMany(CanvasItem::class,'member_pen_note' ,  'member_id', 'canva_item_id')->withTimestamps();
     }
 
     /**
@@ -103,7 +118,7 @@ class Member extends Model
      *
      * @return object
      */
-    public static function create_member($details)
+    public static function create_user_member($details)
     {
         $member = Member::create([
                 "member_first_name" =>  $details['member_first_name'],
@@ -114,7 +129,7 @@ class Member extends Model
                 "has_vote" =>  $details['has_vote']  == 1 ? true : false,
                 "business_id" =>  $details['business_id'],
                 "position_id" => $details['position_id'],
-                "member_password" => $details['member_password']?? null,
+                "member_password" => Hash::make($details['member_password'])?? null,
                 "member_profile_image" =>  $details['member_profile_image'] ? $details['member_profile_image'] : null,
                 "member_biography" =>  $details['member_biography'] ? $details['member_biography'] : null,
                 ]);

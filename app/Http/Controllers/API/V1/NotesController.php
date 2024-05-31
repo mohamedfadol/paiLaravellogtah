@@ -2,104 +2,194 @@
 
 namespace App\Http\Controllers\API\V1;
 
+use PDFParser;
 use Carbon\Carbon;
 use App\Models\Note;
+use App\Models\User;
 use App\Models\Board;
+use App\Models\Member;
 use App\Models\Meeting;
+use App\Models\CanvasItem;
+use App\Models\AudioNote;
 use App\Models\Committee;
+use Spatie\PdfToText\Pdf;
+use App\Models\Notification;
+use App\Models\Stroke;
 use Illuminate\Http\Request;
 use App\Traits\HttpResponses;
+use Smalot\PdfParser\Parser; 
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\File;
 use Symfony\Component\Process\Process;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\SearchableRequest;
 use Illuminate\Support\Facades\Validator;
+use App\Services\FirebaseNotificationService;
 use Symfony\Component\Process\Exception\ProcessFailedException;
-use PDFParser;
-use Smalot\PdfParser\Parser; 
+use Illuminate\Support\Facades\Auth;
+
 class NotesController extends Controller
 {
     use HttpResponses;
 
+    //  FirebaseNotificationService $firebaseNotificationService;
+    public function __construct(private FirebaseNotificationService $firebaseNotificationService)
+    {
+        $this->firebaseNotificationService = $firebaseNotificationService;
+    }
+
+    public function removeExtraSpaces($text) {
+        // Replace two or more spaces with a single space
+        $cleanedText = preg_replace('/\s+/', ' ', $text);
+        return $cleanedText;
+    }
+
+    public function stringToArray($inputString) {
+        return explode(' ', $inputString);
+    }
+
+    public function processStringVaryingBehavior($inputString) {
+        $results = [];
+    
+        // Original string
+        $results[0] = $inputString;
+    
+        // Remove words shorter than 4 characters
+        $words = explode(' ', $inputString);
+        $filteredWords = array_filter($words, function($word) {
+            return mb_strlen($word, 'UTF-8') >= 4;
+        });
+        $results[1] = implode(' ', $filteredWords);
+    
+        // Randomize word order
+        shuffle($words);
+        $results[2] = implode(' ', $words);
+    
+        return $results;
+    }
+    
+    public function randomSubset($words) {
+        shuffle($words); // Shuffle the array of words
+        
+        // Decide whether to return the whole array or just a part of it
+        if (rand(0, 1) === 1) { // 50% chance
+            // Return the whole shuffled array
+            return $words;
+        } else {
+            // Return a subset of the array
+            $subsetLength = rand(1, count($words)); // Determine the length of the subset
+            return array_slice($words, 0, $subsetLength); // Return the subset
+        }
+    }
+
     public function searchArabicText($request)
     {
-            \Log::info("comeing request searchArabicText function");
-            $searchText  = $this->reverseWords($request->input('searchText'));
-            // $folderPath = public_path('meetings/boards');
-            // $files = \File::files($folderPath);
-            $files = $this->getPdfFiles();
-            // dd($files);
-            $results = [];
-            foreach ($files['meetings'] as $file) {
-                $config = new \Smalot\PdfParser\Config();
-                // Whether to retain raw image data as content or discard it to save memory
-                // $config->setRetainImageContent(false);
-                // Memory limit to use when de-compressing files, in bytes
-                // $config->setDecodeMemoryLimit(100000000000000032);
-                $config->setIgnoreEncryption(true);
-                // $config->setHorizontalOffset('');
-                // A tab can help preserve the structure of your document
-                // $config->setHorizontalOffset("\t");
-                // $config->setFontSpaceLimit(-60);
-                $parser = new \Smalot\PdfParser\Parser([], $config);
-                try{
-                    $pdf = $parser->parseFile($file);
-                    $text = $pdf->getText();
-                    // Count occurrences of the search term
-                    $count = substr_count(strtolower($text), $searchText);
+        $searchText = $this->removeExtraSpaces(trim($request->input('searchText')));
+        // dd($searchText);
+        \Log::info("coming request searchArabicText function");
+    
+        $files = $this->getPdfFiles();
+        $results = [];
+        foreach ($files['meetings'] as $file) {
+            $text = Pdf::getText($file, 'C:\poppler\Library\bin\pdftotext.exe');
+            
+            // Get all modified versions of searchText
+            $modifiedSearchTexts = $this->processStringVaryingBehavior($searchText);
+           
+            foreach ($modifiedSearchTexts as $i => $modifiedSearchText) {
+                // echo 'modifiedSearchText '. $modifiedSearchText;
+                if (!empty($modifiedSearchText)) {
+                    $count = substr_count(strtolower($text), strtolower($modifiedSearchText));
+                    if ($count || $count > 0) {
+                        $results[] = [
+                            'url' => $file,
+                            'count' => $count,
+                            'search_text' => $modifiedSearchText,
+                            'modification_type' => $i // Indicate the type of modification
+                        ];
+                        // Do not break; collect all matches
+                    }
+                }
+            }
+            // if (!empty($results) || empty($results)) {
+    
+                      // Perform 5 shuffles and searches
+                for ($i = 0; $i < 10; $i++) {
+                    // Shuffle the search text
+                    $words = $this->stringToArray($searchText);
+                    // Use the randomSubset function to shuffle and potentially return a subset of words
+                    $subsetWords = $this->randomSubset($words);
+                    
+                    $shuffledSearchText = implode(' ', $subsetWords);
+                    // dd($words , $shuffledSearchText);
+                    // Search with the shuffled text
+                    $count = substr_count(strtolower($text), strtolower($shuffledSearchText));
                     if ($count > 0) {
                         $results[] = [
                             'url' => $file,
                             'count' => $count,
-                            'search_text' => $request->input('searchText')
+                            'search_text' => $shuffledSearchText,
+                            'shuffle_iteration' => $i + 1 // Indicates the shuffle iteration (1 through 5)
                         ];
+                        // Continue to next shuffle without breaking, to collect results from all shuffles
                     }
-                } catch (\Exception $e) {
-                    // Handle any exceptions, possibly log them or continue to the next file
-                    continue;
+                    // echo 'hi '.$i;
+                }
+            // }
+            //If no match was found with any modifications, proceed to search with individual words
+            if (!empty($results) || empty($results)) {
+                $words = $this->stringToArray($searchText);
+
+                $filteredWords = array_filter($words, function($word) {
+                    return mb_strlen($word, 'UTF-8') >= 4;
+                });
+
+                foreach ($filteredWords as $word) {
+                    if (!empty($word)) { // Ensure the word is not empty
+                        $count = substr_count(strtolower($text), strtolower($word));
+                        if ($count > 0) {
+                            $results[] = [
+                                'url' => $file,
+                                'count' => $count,
+                                'search_text' => $word,
+                                'modification_type' => 'word' // Indicate searching by individual word
+                            ];
+                            break; // Exit the loop early since a match was found
+                        }
+                    }
+                    // echo 'word '.$word;
                 }
             }
+
+        }
     
-            if (!empty($results)) {
-                return $this->success(['files' =>  $results]); 
-            } else {
-                return response()->json(['found' => false, 'message' => 'Text not found in any PDF.']);
-            }
-         
+        if (!empty($results)) {
+            return $this->success(['files' => $results]);
+        } else {
+            return response()->json(['found' => false, 'message' => 'Text not found in any PDF.']);
+        }
     }
+    
 
     public function searchEnglishText($request)
     {
             \Log::info("comeing request searchEnglishText function");
-            // echo 'pcre.backtrack_limit: ', ini_get('pcre.backtrack_limit'), '<br>';
-            // echo 'pcre.recursion_limit: ', ini_get('pcre.recursion_limit'), '<br>';
             $searchText  = $request->input('searchText');
-            // $files = $request->file('pdfs');
             $files = $this->getPdfFiles();
-            // $files = \File::files($folderPath);
-            // dd($files);
             $results = [];
             foreach ($files['meetings'] as $file) {
                 $config = new \Smalot\PdfParser\Config();
-                // Whether to retain raw image data as content or discard it to save memory
-                // $config->setRetainImageContent(false);
-                // Memory limit to use when de-compressing files, in bytes
-                // $config->setDecodeMemoryLimit(100000000000000032);
                 $config->setIgnoreEncryption(true);
-                // $config->setHorizontalOffset('');
-                // A tab can help preserve the structure of your document
-                // $config->setHorizontalOffset("\t");
-                // $config->setFontSpaceLimit(-60);
                 $parser = new \Smalot\PdfParser\Parser([], $config);
                  try {
                         $pdf = $parser->parseFile($file);
                         $text = $pdf->getText();
-                        // $testBinary = preg_replace('/\(.*$/s', '', $text);
-                        // if (!preg_match('/^[a-zA-Z0-9 \r\n\/*#<>\[\].\'"_-]*$/', $testBinary)) {
-                        //     // if (false === mb_check_encoding(preg_replace('/\(.*$/s', '', $text), 'UTF-8')) {
-                        //     continue;
-                        // }
+                        
+                        if (false === mb_check_encoding($text, 'UTF-8')) {
+                            // If the text is not valid UTF-8, continue to the next file
+                            continue;
+                        }
+                        // dd($text);
                         // Count occurrences of the search term
                         $count = substr_count(strtolower($text), strtolower($searchText));
                         if ($count > 0) {
@@ -139,11 +229,11 @@ class NotesController extends Controller
         if ($containsArabic && !$containsEnglish) {
             return $this->searchArabicText($request);
         } elseif (!$containsArabic && $containsEnglish) {
-            return $this->searchEnglishText($request);
+            return $this->searchArabicText($request);
         } elseif ($containsArabic && $containsEnglish) {
-            return $this->searchEnglishText($request);
+            return $this->searchArabicText($request);
         } else {
-            return  $this->searchEnglishText($request);
+            return  $this->searchArabicText($request);
         }
     }
 
@@ -288,13 +378,51 @@ class NotesController extends Controller
     public function getListOfBoardNotes(Request $request)
     {
         try{
-            \Log::info("comeing request notes");
+            \Log::info($request->all());
             $currentYear = Carbon::now()->format('Y');
             $year = $request->dateYearRequest ?? $currentYear;
             \Log::info($year);
             $boards =  Board::with([
-                                    'meetings' => function ($q) {
-                                            $q->with('agendas')
+                                    'meetings' => function ($q) use($request){
+                                            $q->with(['agendas' => function($q) use($request){ 
+                                                $q->with([
+                                                            'notes'=> function($query) use($request){
+                                                                    if ($request->isChecked === true) {
+                                                                        $query->byAuth(Auth::id())->with('user')->get();
+                                                                    }else{
+                                                                        $query->with('user');
+                                                                    }
+                                                            
+                                                            }
+                                                            ,
+                                                            'audio_notes' => function($query) use($request){ 
+                                                               if ($request->isChecked === true) {
+                                                                        $query->byAuth(Auth::id())->with('user')->get();
+                                                                    }else{
+                                                                        $query->with('user');
+                                                                    }
+                                                                
+                                                            }
+                                                            ,
+                                                            'strokes' => function($query) use($request){ 
+                                                               if ($request->isChecked === true) {
+                                                                        $query->byAuth(Auth::id())->with('user')->get();
+                                                                    }else{
+                                                                        $query->with('user');
+                                                                }
+                                                            }
+                                                            ,
+                                                            'canvasItems' => function($query) use($request){ 
+                                                                $query->with('strokes');
+                                                               if ($request->isChecked === true) {
+                                                                        $query->byAuth(Auth::id())->with('user')->get();
+                                                                    }else{
+                                                                        $query->with('user');
+                                                                }
+                                                            }
+                                                        ]);
+                                                
+                                            }])
                                             ->whereHas('agendas');
                                     },
                                     'business',
@@ -331,8 +459,44 @@ class NotesController extends Controller
             $year = $request->dateYearRequest ?? $currentYear;
             \Log::info($year);
             $committees =  Committee::with([
-                                    'meetings' => function ($q) {
-                                            $q->with('agendas')
+                                    'meetings' => function ($q) use($request){
+                                            $q->with(['agendas' => function($q) use($request){ 
+                                                $q->with([
+                                                            'notes'=> function($query) use($request){
+                                                                    if ($request->isChecked === true) {
+                                                                        $query->byAuth(Auth::id())->with('user')->get();
+                                                                    }else{
+                                                                        $query->with('user');
+                                                                    }
+                                                            }
+                                                            ,
+                                                            'audio_notes' => function($query) use($request){ 
+                                                               if ($request->isChecked === true) {
+                                                                        $query->byAuth(Auth::id())->with('user')->get();
+                                                                    }else{
+                                                                        $query->with('user');
+                                                                }
+                                                                
+                                                            }
+                                                            ,
+                                                            'strokes' => function($query) use($request){ 
+                                                               if ($request->isChecked === true) {
+                                                                        $query->byAuth(Auth::id())->with('user')->get();
+                                                                    }else{
+                                                                        $query->with('user');
+                                                                }
+                                                            }
+                                                            ,
+                                                            'canvasItems' => function($query) use($request){ 
+                                                               if ($request->isChecked === true) {
+                                                                        $query->byAuth(Auth::id())->with('user')->get();
+                                                                    }else{
+                                                                        $query->with('user');
+                                                                }
+                                                            }
+                                                        ]);
+                                                
+                                            }])
                                             ->whereHas('agendas');
                                     },
                                     'business',
@@ -364,18 +528,18 @@ class NotesController extends Controller
     public function insertNewNote(Request $request)
     {
         \Log::info($request->all());
-        try{
+        // try{
                 $validator = Validator::make($request->all(),
                                         [
                                         // '*.ListDataOfNotes.*.criteria_category' => 'required',
                                             // "member_id" => 'required',
-                                            "businessId" => 'required',
+                                            "business_id" => 'required',
                                         ]);
         
                 if ($validator->fails()) {
                     return  $this->error('', $validator->errors(), 401);
                 }
-                
+                           
                 // $signatureName = 'member_signature_'.time().'_.png';
                 // $signatureSelf = base64_decode($request->uploadSignature);
                 // Storage::disk('signatures_uploads')->put($signatureName, $signatureSelf);
@@ -384,21 +548,128 @@ class NotesController extends Controller
                 // $imageName = time() . '.' . $file;
                 // $imageSelf = base64_decode($request->imageSelf);
                 // Storage::disk('public_uploads')->put($request->business_id . '/' . $imageName, $imageSelf);
+                $note = new Note;
+                // if($request->List_data_of_notes && is_array($request->List_data_of_notes) && count($request->List_data_of_notes) > 0){
+                //     for($i = 0; $i < count($request->List_data_of_notes); $i++){
+                        
+                //         $note->note = $request->List_data_of_notes[$i]['text'];
+                //         $note->annotation_id = $request->List_data_of_notes[$i]['id'];
+                //         $note->positionDx = $request->List_data_of_notes[$i]['positionDx'];
+                //         $note->positionDy = $request->List_data_of_notes[$i]['positionDy'];
+                //         $note->isPrivate = $request->List_data_of_notes[$i]['isPrivate'];
+                //         $note->page_index = $request->List_data_of_notes[$i]['pageIndex'];
+                //         $note->addby = $request->add_by;
+                //         $note->agenda_id = $request->agenda_id;
+                //         $note->business_id = $request->business_id;
+                //         $note->file_edited = $request->file_edited;
+                //         $note->save();
+                //     }
+                // }
                 
-                if($request->ListDataOfNotes && is_array($request->ListDataOfNotes) && count($request->ListDataOfNotes) > 0){
-                    for($i = 0; $i < count($request->ListDataOfNotes); $i++){
-                        $note = new Note;
-                        $note->note = $request->ListDataOfNotes[$i]['text'];
-                        $note->annotation_id = $request->ListDataOfNotes[$i]['id'];
-                        $note->positionDx = $request->ListDataOfNotes[$i]['positionDx'];
-                        $note->positionDy = $request->ListDataOfNotes[$i]['positionDy'];
-                        $note->isPrivate = $request->ListDataOfNotes[$i]['isPrivate'];
-                        $note->page_index = $request->ListDataOfNotes[$i]['pageIndex'];
-                        $note->addby = $request->addby;
-                        $note->agenda_id = $request->agenda_id;
-                        $note->business_id = $request->businessId;
-                        $note->file_edited = $request->fileEdited;
-                        $note->save();
+                foreach ($request->List_data_of_notes as $noteRequest) {
+                    $note = new Note;
+                    $note->note = $noteRequest['text'];
+                    $note->annotation_id = $noteRequest['id'];
+                    $note->positionDx = $noteRequest['positionDx'];
+                    $note->positionDy = $noteRequest['positionDy'];
+                    $note->isPrivate = $noteRequest['isPrivate'];
+                    $note->page_index = $noteRequest['pageIndex'];
+                    $note->addby = $request->add_by;
+                    $note->agenda_id = $request->agenda_id;
+                    $note->business_id = $request->business_id;
+                    $note->file_edited = $request->file_edited;
+                    $note->save();
+                }
+                // Associate a note with a members
+                if (!empty($request->shared_note_members)) {
+                    $note->members()->attach($request->shared_note_members);
+                    $members = User::whereIn('member_id', $request->shared_note_members)->get();
+                    foreach ($members as $member) {
+                        $data['token'] = $member->fcm;
+                        $data['body'] = $note->note;
+                        $data['title'] = 'mentioned you with new note';
+                        $this->firebaseNotificationService->sendFirebaseNotification($data);
+
+                        // Notification::create([
+                        //     'notification_title' => $action->tasks,
+                        //     'notification_body' => $action->date_due,
+                        //     'notification_token' => $data['token'],
+                        //     'member_id' => $member->id,
+                        //     'user_id' => $request->add_by,
+                        //     'note_id' => $note->id,
+                        //     'action_id' => $action->id,
+                        //     'business_id' => $request->business_id
+                        // ]);
+                    }
+                }
+                
+                    if(!empty($request->records_files)){
+                    $base64EncodedFiles = $request->records_files;
+                    foreach ($base64EncodedFiles as $base64EncodedFile) {
+                        $fileName ='record'.md5(uniqid(rand(), true)).'.mp3';
+                        $fileData = base64_decode($base64EncodedFile['base64']);
+                        Storage::disk('record_notes_uploads')->put($request->business_id . '/notes/records/' . $fileName, $fileData);
+                    
+                        $audioNote = AudioNote::create([
+                            'audio_name' => $base64EncodedFile['fileName'],
+                            'audio_random_name' => $fileName,
+                            'audio_id' => $base64EncodedFile['id'],
+                            'file_full_path' => '',
+                            'audio_time' => '',
+                            'positionDx' => '',
+                            'positionDy' => '',
+                            'page_index' => $base64EncodedFile['filePageIndex'],
+                            'addby' => $request->add_by,
+                            'agenda_id' => $request->agenda_id,
+                            'business_id' => $request->business_id,
+                        ]);
+                    }
+                }
+                
+                foreach ($request->canvas as $canvasItemData) {
+                    // Create CanvasItem
+                    $canvasItem = CanvasItem::create([
+                        'canva_id' => $canvasItemData['canva_id'],
+                        'position_dx' => $canvasItemData['position_dx'],
+                        'position_dy' => $canvasItemData['position_dy'],
+                        'canvas_width' => $canvasItemData['canvas_width'],
+                        'canvas_height' => $canvasItemData['canvas_height'],
+                        'page_index' => $canvasItemData['page_index'],
+                        'addby' => $request->add_by,
+                        'agenda_id' => $request->agenda_id,
+                    ]);
+                
+                    // Loop through each Stroke for the current CanvasItem
+                    foreach ($canvasItemData['strokes'] as $strokeData) {
+                        
+                        $position = array();
+                        $position['dx'] =  $strokeData['position']['dx'];
+                        $position['dy'] =  $strokeData['position']['dy'];
+                      
+                        $paints = array(); 
+                        foreach ($strokeData['points'] as $pointData) {
+                            $paints[] = [
+                                'dx' => $pointData['dx'],
+                                'dy' => $pointData['dy'],
+                            ];
+                        }  
+                
+                        $stroke = new Stroke([
+                            'points' => json_encode($paints),
+                            'position' => json_encode($position),
+                            'page_index' => $strokeData['page_index'],
+                            'stroke_color' => $strokeData['stroke_color'],
+                            'stroke_width' => $strokeData['stroke_width'],
+                            'stroke_cap' => $strokeData['stroke_cap'],
+                            'canvas_item_id' => $canvasItemData['canva_id'],
+                            'file_full_path' => $request->file_edited,
+                            'addby' => $request->add_by,
+                            'agenda_id' => $request->agenda_id,
+                            'business_id' => $request->business_id,
+                        ]);
+                
+                        // Associate the Stroke with the CanvasItem
+                        $canvasItem->strokes()->save($stroke);
                     }
                 }
                 
@@ -406,66 +677,34 @@ class NotesController extends Controller
                 return $this->success([
                     'note' => $note,
                 ]);
-        }catch (\Exception $e) {
-            \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
-            return $this->error('', 'some thing occurs on create note !!!', 500);
-        }
+        // }catch (\Exception $e) {
+        //     \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
+        //     return $this->error('', 'some thing occurs on create note !!!', 500);
+        // }
        
     }
 
     /**
-     * Store a newly created resource in storage.
+     * get a list of notes resource from storage.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function getListOfNotes(Request $request)
     {
-        //
+        \Log::info($request->all());
+        try{
+                $notes = Note::get();
+                \Log::info($notes);
+                return $this->success([
+                    'notes' => $notes,
+                ]);
+            }catch (\Exception $e) {
+                \Log::emergency("File:" . $e->getFile(). "Line:" . $e->getLine(). "Message:" . $e->getMessage());
+                return $this->error('', 'some thing occurs on get list notes !!!', 500);
+            }
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
-    }
+ 
+ 
 }

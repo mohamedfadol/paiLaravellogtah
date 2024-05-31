@@ -12,19 +12,21 @@ return new class extends Migration
      * @return void
      */
     public function up()
-    { 
-        Schema::create('notes', function (Blueprint $table) {
+    {
+        Schema::create('audio_notes', function (Blueprint $table) {
             $table->id();
-            $table->longText('note')->nullable();
-            $table->integer('annotation_id')->nullable();
+            $table->string('audio_name')->nullable();
+            $table->string('audio_random_name')->nullable();
+            $table->integer('audio_id')->nullable();
+            $table->string('file_full_path')->nullable();
+            $table->string('audio_time')->nullable();
             $table->double('positionDx')->nullable();
             $table->double('positionDy')->nullable();
             $table->integer('page_index')->nullable();
-            $table->boolean('isPrivate')->default(false);
-            $table->string('file_edited')->nullable();
+            $table->boolean('is_private')->default(false);
+            $table->integer('addby')->nullable();
+            $table->integer('agenda_id')->nullable();
             $table->unsignedBigInteger('business_id')->nullable();
-            // $table->unsignedBigInteger('member_id')->nullable();
-            // $table->foreign('member_id')->references('id')->on('members')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -36,6 +38,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('notes');
+        Schema::dropIfExists('audio_notes');
     }
 };

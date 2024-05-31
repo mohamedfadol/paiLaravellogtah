@@ -76,12 +76,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // member routes for resources
     Route::controller(MemberController::class)
-    ->group(function () {
+    ->group(function () { 
         Route::post('insert-new-member', 'inserNewMember');
         Route::get('get-list-members/{business_id}', 'getListOfMember');
 
     });
-
+  
     // fetch list of positions
     Route::get('get-list-positions/{business_id}', [PositionController::class,'getListOfPositions']);
         // fetch list of searchables
@@ -181,7 +181,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('get-all-extract-text','makeSearchForAllFile');
         Route::post('extract-pdf-text-multiple-uri','extractEnglishTextFromMultiplePdfFilesFromUri');
         Route::post('get-all-arabic-text','extractArabicTextFromMultiplePdfFilesFromUri');
-        Route::post('ge-text','searcha');
+        Route::post('get-all-notes','getListOfNotes');
     });
    
     // get list of notification for specific member

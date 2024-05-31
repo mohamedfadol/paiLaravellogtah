@@ -92,6 +92,7 @@ class ComposerStaticInitdf00a8750699adfbf7634f1a7ddfd231
             'Symfony\\Component\\CssSelector\\' => 30,
             'Symfony\\Component\\Console\\' => 26,
             'Spatie\\Permission\\' => 18,
+            'Spatie\\PdfToText\\' => 17,
             'Spatie\\LaravelPackageTools\\' => 27,
             'Spatie\\LaravelIgnition\\' => 23,
             'Spatie\\Ignition\\' => 16,
@@ -329,6 +330,10 @@ class ComposerStaticInitdf00a8750699adfbf7634f1a7ddfd231
         'Spatie\\Permission\\' => 
         array (
             0 => __DIR__ . '/..' . '/spatie/laravel-permission/src',
+        ),
+        'Spatie\\PdfToText\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/spatie/pdf-to-text/src',
         ),
         'Spatie\\LaravelPackageTools\\' => 
         array (
@@ -648,15 +653,18 @@ class ComposerStaticInitdf00a8750699adfbf7634f1a7ddfd231
         'App\\Http\\Requests\\ProfileUpdateRequest' => __DIR__ . '/../..' . '/app/Http/Requests/ProfileUpdateRequest.php',
         'App\\Http\\Requests\\SearchableRequest' => __DIR__ . '/../..' . '/app/Http/Requests/SearchableRequest.php',
         'App\\Http\\Requests\\StoreUserRequest' => __DIR__ . '/../..' . '/app/Http/Requests/StoreUserRequest.php',
+        'App\\Mail\\WelcomeOneTimePasswordEmail' => __DIR__ . '/../..' . '/app/Mail/WelcomeOneTimePasswordEmail.php',
         'App\\Models\\ActionTracker' => __DIR__ . '/../..' . '/app/Models/ActionTracker.php',
         'App\\Models\\Agenda' => __DIR__ . '/../..' . '/app/Models/Agenda.php',
         'App\\Models\\AgendaDetails' => __DIR__ . '/../..' . '/app/Models/AgendaDetails.php',
         'App\\Models\\AnnualAuditReport' => __DIR__ . '/../..' . '/app/Models/AnnualAuditReport.php',
         'App\\Models\\AnnualReport' => __DIR__ . '/../..' . '/app/Models/AnnualReport.php',
         'App\\Models\\AttendanceBoard' => __DIR__ . '/../..' . '/app/Models/AttendanceBoard.php',
+        'App\\Models\\AudioNote' => __DIR__ . '/../..' . '/app/Models/AudioNote.php',
         'App\\Models\\Board' => __DIR__ . '/../..' . '/app/Models/Board.php',
         'App\\Models\\Business' => __DIR__ . '/../..' . '/app/Models/Business.php',
         'App\\Models\\BusinessLocation' => __DIR__ . '/../..' . '/app/Models/BusinessLocation.php',
+        'App\\Models\\CanvasItem' => __DIR__ . '/../..' . '/app/Models/CanvasItem.php',
         'App\\Models\\Committee' => __DIR__ . '/../..' . '/app/Models/Committee.php',
         'App\\Models\\Criteria' => __DIR__ . '/../..' . '/app/Models/Criteria.php',
         'App\\Models\\Disclosure' => __DIR__ . '/../..' . '/app/Models/Disclosure.php',
@@ -676,6 +684,7 @@ class ComposerStaticInitdf00a8750699adfbf7634f1a7ddfd231
         'App\\Models\\Searchable' => __DIR__ . '/../..' . '/app/Models/Searchable.php',
         'App\\Models\\ShareHolder' => __DIR__ . '/../..' . '/app/Models/ShareHolder.php',
         'App\\Models\\Signature' => __DIR__ . '/../..' . '/app/Models/Signature.php',
+        'App\\Models\\Stroke' => __DIR__ . '/../..' . '/app/Models/Stroke.php',
         'App\\Models\\Subscription' => __DIR__ . '/../..' . '/app/Models/Subscription.php',
         'App\\Models\\System' => __DIR__ . '/../..' . '/app/Models/System.php',
         'App\\Models\\Tax' => __DIR__ . '/../..' . '/app/Models/Tax.php',
@@ -5208,6 +5217,9 @@ class ComposerStaticInitdf00a8750699adfbf7634f1a7ddfd231
         'Spatie\\LaravelPackageTools\\Exceptions\\InvalidPackage' => __DIR__ . '/..' . '/spatie/laravel-package-tools/src/Exceptions/InvalidPackage.php',
         'Spatie\\LaravelPackageTools\\Package' => __DIR__ . '/..' . '/spatie/laravel-package-tools/src/Package.php',
         'Spatie\\LaravelPackageTools\\PackageServiceProvider' => __DIR__ . '/..' . '/spatie/laravel-package-tools/src/PackageServiceProvider.php',
+        'Spatie\\PdfToText\\Exceptions\\CouldNotExtractText' => __DIR__ . '/..' . '/spatie/pdf-to-text/src/Exceptions/CouldNotExtractText.php',
+        'Spatie\\PdfToText\\Exceptions\\PdfNotFound' => __DIR__ . '/..' . '/spatie/pdf-to-text/src/Exceptions/PdfNotFound.php',
+        'Spatie\\PdfToText\\Pdf' => __DIR__ . '/..' . '/spatie/pdf-to-text/src/Pdf.php',
         'Spatie\\Permission\\Commands\\CacheReset' => __DIR__ . '/..' . '/spatie/laravel-permission/src/Commands/CacheReset.php',
         'Spatie\\Permission\\Commands\\CreatePermission' => __DIR__ . '/..' . '/spatie/laravel-permission/src/Commands/CreatePermission.php',
         'Spatie\\Permission\\Commands\\CreateRole' => __DIR__ . '/..' . '/spatie/laravel-permission/src/Commands/CreateRole.php',

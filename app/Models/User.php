@@ -106,13 +106,15 @@ class User extends Authenticatable
                     'surname' => $details['surname'],
                     'first_name' => $details['first_name'],
                     'last_name' => $details['last_name'],
+                    'user_type' => !empty($details['user_type']) ? $details['user_type'] : 'user',
+                    'member_id' => !empty($details['member_id']) ? $details['member_id'] : null,
                     'username' => $details['username'],
+                    'business_id' => $details['business_id'],
                     'email' => $details['email'],
                     'name_password' => $details['password'],
                     'password' => Hash::make($details['password']),
                     'language' => !empty($details['language']) ? $details['language'] : 'ar'
                 ]);
-
         return $user;
     }
 

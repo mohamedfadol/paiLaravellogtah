@@ -55,6 +55,42 @@ class MinutesController extends Controller
                 $q->where(DB::raw('YEAR(created_at)'), $year)->orWhere(DB::raw('YEAR(created_at)'), Carbon::now()->format('Y'));
             })->get();
 
+
+
+
+            // $minutes = Minutes::with([
+            //     'business',
+            //     'user',
+            //     'attendance_boards',
+            //     'meeting.agendas.agenda_details.agenda',
+            //     'meeting.committee.board.business',
+            //     'meeting.committee.members.position',
+            //     'meeting.board.business',
+            //     'committee.board.business',
+            //     'committee.members.position',
+            //     'board.business',
+            //     'board.members' => function ($query) {
+            //         $query->with([
+            //             'position',
+            //             'minute_signature.member' => function ($query) {
+            //                 $query->with([
+            //                     'position',
+            //                     'minute_signature.member.position'
+            //                 ]);
+            //             },
+            //             'signature_member.member' => function ($query) {
+            //                 $query->with('position', 'minute_signature');
+            //             }
+            //         ]);
+            //     }
+            // ])->where('business_id', $request->business_id)
+            //   ->where(function($query) use ($year) {
+            //       $query->whereYear('created_at', $year);
+            //   })
+            //   ->get();
+
+
+
         if (!$minutes) {
             return $this->error('', 'there\'s not minutes found', 401);
         }

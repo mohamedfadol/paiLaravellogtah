@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Note extends Model
+class CanvasItem extends Model
 {
     use HasFactory;
 
-    protected $table = 'notes';
+    protected $table = 'canvas_items';
     protected $guarded = ['id'];
 
     public function user() {
@@ -24,14 +24,12 @@ class Note extends Model
         return $this->belongsTo(Agenda::class, 'agenda_id');
     }
 
+    public function strokes() {
+        return $this->hasMany(Stroke::class, 'canvas_item_id');
+    }
+
     public function members()
     {
-        return $this->belongsToMany(Member::class);
-    }
-    
-    public function scopeByAuth($query, $minPrice)
-    {
-        return $query->where('addby', $minPrice);
+        return $this->belongsToMany(Member::class, 'member_pen_note' , 'canva_item_id', 'member_id')->withTimestamps();
     }
 }
- 

@@ -3,17 +3,20 @@
 namespace App\Http\Controllers\API\V1;
 
 use DB;
+use App\Models\User;
 use App\Models\Member;
 use App\Utils\ModuleUtil;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use App\Traits\HttpResponses;
-use App\Http\Requests\MemberRequest;
-use Illuminate\Support\Facades\Hash; 
 use Spatie\Permission\Models\Role;
-use Illuminate\Support\Facades\Validator;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\MemberRequest;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Hash; 
 use Illuminate\Support\Facades\Storage;
+use App\Mail\WelcomeOneTimePasswordEmail;
+use Illuminate\Support\Facades\Validator;
 
 class MemberController extends Controller
 {
@@ -45,41 +48,62 @@ class MemberController extends Controller
                                                                 'member_last_name' => 'required',
                                                                 'member_email' => 'required|unique:members,member_email',
                                                                 "business_id" => 'required',
-                                                                "uploadSignature" => 'required',
-                                                                "position_id" => 'required',
+                                                                // "uploadSignature" => 'required',
+                                                                // "position_id" => 'required',
                                                                 "member_profile_image" => 'required',
                                                             ]);
         
                 if ($validator->fails()) {
                     return  $this->error('', $validator->errors(), 401);
                 }
+                if (!empty($request->uploadSignature)) {
+                    $signatureName = 'member_signature_'.time().'_.png';
+                    $signatureSelf = base64_decode($request->uploadSignature);
+                    Storage::disk('signatures_uploads')->put($signatureName, $signatureSelf);
+                }
                 
-                $signatureName = 'member_signature_'.time().'_.png';
-                $signatureSelf = base64_decode($request->uploadSignature);
-                Storage::disk('signatures_uploads')->put($signatureName, $signatureSelf);
-                
-                $file = $request->member_profile_image;
-                $imageName = time() . '.' . $file;
-                $imageSelf = base64_decode($request->imageSelf);
-                Storage::disk('public_uploads')->put($request->business_id . '/' . $imageName, $imageSelf);
-                
+                if (!empty($request->member_profile_image)) {
+                    $file = $request->member_profile_image;
+                    $imageName = time() . '.' . $file;
+                    $imageSelf = base64_decode($request->imageSelf);
+                    Storage::disk('public_uploads')->put($request->business_id . '/' . $imageName, $imageSelf);
+                }
+
                 // $member = $this->moduleUtil->createMember($request);
                 
                 $member = Member::create([
                                             "member_first_name" =>  $request->member_first_name,
                                             "member_middel_name" => $request->member_middel_name,
-                                            'signature' => $request->uploadSignature,
+                                            // 'signature' => $request->uploadSignature,
                                             "member_last_name" =>  $request->member_last_name,
                                             "member_email" =>  $request->member_email,
                                             "is_active" =>  $request->is_active  == 1 ? true : false,
                                             "has_vote" =>  $request->has_vote  == 1 ? true : false,
                                             "business_id" =>  $request->business_id,
                                             "position_id" => $request->position_id,
-                                            "name_password" => $request->member_password ?? null,
-                                            "member_password" => Hash::make($request->member_password) ?? null,
+                                            // "name_password" => $request->member_password ?? null,
+                                            // "member_password" => Hash::make($request->member_password) ?? null,
                                             "member_profile_image" =>  $imageName ?? null,
-                                            "member_biography" =>  $request->member_biography ?? null,
+                                            // "member_biography" =>  $request->member_biography ?? null,
                                         ]);
+                $password_round = rand(120,127);
+                $details = [
+                                'surname' => $request->member_first_name,
+                                'first_name' => $request->member_first_name,
+                                'user_type' => 'member',
+                                'member_id' => $member->id,
+                                'last_name' => $request->member_last_name,
+                                'username' => $request->member_first_name,
+                                'business_id' =>  $request->business_id,
+                                'email' => $request->member_email,
+                                'name_password' => $password_round,
+                                'password' => Hash::make($password_round),
+                                'language' => 'ar'
+                            ];                       
+                $user = User::create_user($details);  
+                // send email to member with password one time but need server config for email
+                // Mail::to($user->email)->send(new WelcomeOneTimePasswordEmail($user));
+                     
                 if(!empty($request->board_id)){
                     $member->boards()->attach( $request->board_id );
                 }

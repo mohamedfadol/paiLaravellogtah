@@ -43,7 +43,20 @@ return [
             'visibility' => 'public',
             'throw' => false,
         ],
-
+        'record_notes_uploads' => [
+            'driver' => 'local',
+            'root'   => public_path() . '/record_notes',
+            'permissions' => [
+                'file' => [
+                    'public' => 0755,
+                    'private' => 0755,
+                ],
+                'dir' => [
+                    'public' => 0755,
+                    'private' => 0755,
+                ],
+            ],
+        ],
         'public_uploads' => [
             'driver' => 'local',
             'root'   => public_path() . '/profile_images',

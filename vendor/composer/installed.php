@@ -5,7 +5,7 @@
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => 'c405e056cb404e877dbcead5a5daaeb170c1f370',
+        'reference' => '01672c941ae32041567a340981c0d5001cb1cd4b',
         'name' => 'laravel/laravel',
         'dev' => true,
     ),
@@ -406,7 +406,7 @@
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
-            'reference' => 'c405e056cb404e877dbcead5a5daaeb170c1f370',
+            'reference' => '01672c941ae32041567a340981c0d5001cb1cd4b',
             'dev_requirement' => false,
         ),
         'laravel/pint' => array(
@@ -1056,6 +1056,15 @@
             'install_path' => __DIR__ . '/../spatie/laravel-permission',
             'aliases' => array(),
             'reference' => '3a9bc00e6d338a9c61f830af654aa5c326407632',
+            'dev_requirement' => false,
+        ),
+        'spatie/pdf-to-text' => array(
+            'pretty_version' => '1.52.1',
+            'version' => '1.52.1.0',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../spatie/pdf-to-text',
+            'aliases' => array(),
+            'reference' => 'af603fff25c73accc5b790a9a8d39ca5aa5e9b37',
             'dev_requirement' => false,
         ),
         'symfony/console' => array(
